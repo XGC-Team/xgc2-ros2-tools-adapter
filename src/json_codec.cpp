@@ -3,6 +3,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <exception>
 #include <limits>
 #include <memory>
 #include <new>
@@ -35,7 +36,8 @@ void requireObject(const Json::Value& value, const std::string& path) {
   }
 }
 
-void rejectUnknownFields(const Json::Value& value, const MessageMembers* members,
+void rejectUnknownFields(const Json::Value& value,
+                         const MessageMembers* members,
                          const std::string& path) {
   for (const auto& name : value.getMemberNames()) {
     bool found = false;
@@ -123,15 +125,27 @@ void assignMember(const MessageMember& member, const Json::Value& value,
       member.resize_function != nullptr) {
     member.resize_function(field, requested);
   }
-  if (member.size_function == nullptr || member.get_function == nullptr ||
+  if (member.size_function == nullptr ||
       member.size_function(field) != requested) {
     permanentError("ros_type_support_invalid",
                    path + " sequence introspection is incomplete");
   }
   for (std::size_t index = 0; index < requested; ++index) {
-    assignScalar(member, value[static_cast<Json::ArrayIndex>(index)],
-                 member.get_function(field, index),
-                 path + "[" + std::to_string(index) + "]");
+    const std::string item_path = path + "[" + std::to_string(index) + "]";
+    if (member.get_function != nullptr) {
+      assignScalar(member, value[static_cast<Json::ArrayIndex>(index)],
+                   member.get_function(field, index), item_path);
+    } else if (member.type_id_ ==
+                   rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL &&
+               member.assign_function != nullptr) {
+      bool item = false;
+      assignScalar(member, value[static_cast<Json::ArrayIndex>(index)], &item,
+                   item_path);
+      member.assign_function(field, index, &item);
+    } else {
+      permanentError("ros_type_support_invalid",
+                     item_path + " sequence assignment is unavailable");
+    }
   }
 }
 
@@ -149,8 +163,10 @@ void assignScalar(const MessageMember& member, const Json::Value& value,
       assignFloating<float>(value, output, path);
       return;
     case ROS_TYPE_DOUBLE:
-    case ROS_TYPE_LONG_DOUBLE:
       assignFloating<double>(value, output, path);
+      return;
+    case ROS_TYPE_LONG_DOUBLE:
+      assignFloating<long double>(value, output, path);
       return;
     case ROS_TYPE_CHAR:
     case ROS_TYPE_OCTET:
@@ -235,19 +251,32 @@ Json::Value scalarToJson(const MessageMember& member, const void* input,
 
 Json::Value memberToJson(const MessageMember& member, const void* message,
                          const std::string& path) {
-  const void* field = static_cast<const unsigned char*>(message) + member.offset_;
+  const void* field =
+      static_cast<const unsigned char*>(message) + member.offset_;
   if (!member.is_array_) {
     return scalarToJson(member, field, path);
   }
-  if (member.size_function == nullptr || member.get_const_function == nullptr) {
+  if (member.size_function == nullptr) {
     permanentError("ros_type_support_invalid",
                    path + " sequence introspection is incomplete");
   }
   Json::Value result(Json::arrayValue);
   const std::size_t size = member.size_function(field);
   for (std::size_t index = 0; index < size; ++index) {
-    result.append(scalarToJson(member, member.get_const_function(field, index),
-                               path + "[" + std::to_string(index) + "]"));
+    const std::string item_path = path + "[" + std::to_string(index) + "]";
+    if (member.get_const_function != nullptr) {
+      result.append(scalarToJson(
+          member, member.get_const_function(field, index), item_path));
+    } else if (member.type_id_ ==
+                   rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL &&
+               member.fetch_function != nullptr) {
+      bool item = false;
+      member.fetch_function(field, index, &item);
+      result.append(scalarToJson(member, &item, item_path));
+    } else {
+      permanentError("ros_type_support_invalid",
+                     item_path + " sequence projection is unavailable");
+    }
   }
   return result;
 }
@@ -261,26 +290,43 @@ Json::Value scalarToJson(const MessageMember& member, const void* input,
     case ROS_TYPE_FLOAT:
       return Json::Value(*static_cast<const float*>(input));
     case ROS_TYPE_DOUBLE:
-    case ROS_TYPE_LONG_DOUBLE:
       return Json::Value(*static_cast<const double*>(input));
+    case ROS_TYPE_LONG_DOUBLE: {
+      const long double value = *static_cast<const long double*>(input);
+      if (!std::isfinite(value) ||
+          std::fabs(value) >
+              static_cast<long double>(std::numeric_limits<double>::max())) {
+        permanentError("message_field_out_of_range",
+                       path + " cannot be represented as JSON number");
+      }
+      return Json::Value(static_cast<double>(value));
+    }
     case ROS_TYPE_CHAR:
     case ROS_TYPE_OCTET:
     case ROS_TYPE_UINT8:
-      return Json::Value(static_cast<Json::UInt>(*static_cast<const std::uint8_t*>(input)));
+      return Json::Value(
+          static_cast<Json::UInt>(*static_cast<const std::uint8_t*>(input)));
     case ROS_TYPE_INT8:
-      return Json::Value(static_cast<Json::Int>(*static_cast<const std::int8_t*>(input)));
+      return Json::Value(
+          static_cast<Json::Int>(*static_cast<const std::int8_t*>(input)));
     case ROS_TYPE_UINT16:
-      return Json::Value(static_cast<Json::UInt>(*static_cast<const std::uint16_t*>(input)));
+      return Json::Value(
+          static_cast<Json::UInt>(*static_cast<const std::uint16_t*>(input)));
     case ROS_TYPE_INT16:
-      return Json::Value(static_cast<Json::Int>(*static_cast<const std::int16_t*>(input)));
+      return Json::Value(
+          static_cast<Json::Int>(*static_cast<const std::int16_t*>(input)));
     case ROS_TYPE_UINT32:
-      return Json::Value(static_cast<Json::UInt>(*static_cast<const std::uint32_t*>(input)));
+      return Json::Value(
+          static_cast<Json::UInt>(*static_cast<const std::uint32_t*>(input)));
     case ROS_TYPE_INT32:
-      return Json::Value(static_cast<Json::Int>(*static_cast<const std::int32_t*>(input)));
+      return Json::Value(
+          static_cast<Json::Int>(*static_cast<const std::int32_t*>(input)));
     case ROS_TYPE_UINT64:
-      return Json::Value(static_cast<Json::UInt64>(*static_cast<const std::uint64_t*>(input)));
+      return Json::Value(
+          static_cast<Json::UInt64>(*static_cast<const std::uint64_t*>(input)));
     case ROS_TYPE_INT64:
-      return Json::Value(static_cast<Json::Int64>(*static_cast<const std::int64_t*>(input)));
+      return Json::Value(
+          static_cast<Json::Int64>(*static_cast<const std::int64_t*>(input)));
     case ROS_TYPE_STRING:
       return Json::Value(*static_cast<const std::string*>(input));
     case ROS_TYPE_WSTRING: {
@@ -299,7 +345,8 @@ Json::Value scalarToJson(const MessageMember& member, const void* input,
       Json::Value result(Json::objectValue);
       for (std::uint32_t index = 0; index < nested->member_count_; ++index) {
         const MessageMember& child = nested->members_[index];
-        result[child.name_] = memberToJson(child, input, path + "." + child.name_);
+        result[child.name_] =
+            memberToJson(child, input, path + "." + child.name_);
       }
       return result;
     }
@@ -311,7 +358,8 @@ Json::Value scalarToJson(const MessageMember& member, const void* input,
 
 }  // namespace
 
-DynamicMessage::DynamicMessage(const MessageMembers* members) : members_(members) {
+DynamicMessage::DynamicMessage(const MessageMembers* members)
+    : members_(members) {
   if (members_ == nullptr || members_->init_function == nullptr ||
       members_->fini_function == nullptr || members_->size_of_ == 0) {
     permanentError("ros_type_support_invalid",
@@ -319,7 +367,8 @@ DynamicMessage::DynamicMessage(const MessageMembers* members) : members_(members
   }
   data_ = ::operator new(members_->size_of_);
   try {
-    members_->init_function(data_, rosidl_runtime_cpp::MessageInitialization::ALL);
+    members_->init_function(data_,
+                            rosidl_runtime_cpp::MessageInitialization::ALL);
   } catch (...) {
     ::operator delete(data_);
     data_ = nullptr;
@@ -357,41 +406,53 @@ void DynamicMessage::reset() noexcept {
 
 MessageType JsonCodec::loadMessageType(const std::string& type_name) const {
   MessageType result;
-  result.introspection_library = rclcpp::get_typesupport_library(
-      type_name, "rosidl_typesupport_introspection_cpp");
-  result.introspection_support = rclcpp::get_message_typesupport_handle(
-      type_name, "rosidl_typesupport_introspection_cpp",
-      *result.introspection_library);
-  result.serialization_library =
-      rclcpp::get_typesupport_library(type_name, "rosidl_typesupport_cpp");
-  result.serialization_support = rclcpp::get_message_typesupport_handle(
-      type_name, "rosidl_typesupport_cpp", *result.serialization_library);
+  try {
+    result.introspection_library = rclcpp::get_typesupport_library(
+        type_name, "rosidl_typesupport_introspection_cpp");
+    result.introspection_support = rclcpp::get_message_typesupport_handle(
+        type_name, "rosidl_typesupport_introspection_cpp",
+        *result.introspection_library);
+    result.serialization_library =
+        rclcpp::get_typesupport_library(type_name, "rosidl_typesupport_cpp");
+    result.serialization_support = rclcpp::get_message_typesupport_handle(
+        type_name, "rosidl_typesupport_cpp", *result.serialization_library);
+  } catch (const std::exception& exception) {
+    permanentError("ros_type_support_unavailable",
+                   "ROS2 message type support is unavailable for " + type_name +
+                       ": " + exception.what());
+  }
   if (result.introspection_support == nullptr ||
       result.introspection_support->data == nullptr ||
       result.serialization_support == nullptr) {
     permanentError("ros_type_support_unavailable",
                    "ROS2 message type support is unavailable for " + type_name);
   }
-  result.members = static_cast<const MessageMembers*>(
-      result.introspection_support->data);
+  result.members =
+      static_cast<const MessageMembers*>(result.introspection_support->data);
   return result;
 }
 
 ServiceType JsonCodec::loadServiceType(const std::string& type_name) const {
   ServiceType result;
-  result.introspection_library = rclcpp::get_typesupport_library(
-      type_name, "rosidl_typesupport_introspection_cpp");
-  result.introspection_support = rclcpp::get_service_typesupport_handle(
-      type_name, "rosidl_typesupport_introspection_cpp",
-      *result.introspection_library);
+  try {
+    result.introspection_library = rclcpp::get_typesupport_library(
+        type_name, "rosidl_typesupport_introspection_cpp");
+    result.introspection_support = rclcpp::get_service_typesupport_handle(
+        type_name, "rosidl_typesupport_introspection_cpp",
+        *result.introspection_library);
+  } catch (const std::exception& exception) {
+    permanentError("ros_type_support_unavailable",
+                   "ROS2 service type support is unavailable for " + type_name +
+                       ": " + exception.what());
+  }
   if (result.introspection_support == nullptr ||
       result.introspection_support->data == nullptr) {
     permanentError("ros_type_support_unavailable",
                    "ROS2 service type support is unavailable for " + type_name);
   }
-  result.members = static_cast<
-      const rosidl_typesupport_introspection_cpp::ServiceMembers*>(
-      result.introspection_support->data);
+  result.members =
+      static_cast<const rosidl_typesupport_introspection_cpp::ServiceMembers*>(
+          result.introspection_support->data);
   if (result.members->request_members_ == nullptr ||
       result.members->response_members_ == nullptr) {
     permanentError("ros_type_support_invalid",
@@ -416,12 +477,12 @@ DynamicMessage JsonCodec::messageFromJson(const MessageMembers* members,
 }
 
 Json::Value JsonCodec::messageToJson(const MessageMembers* members,
-                                    const void* message) const {
+                                     const void* message) const {
   Json::Value result(Json::objectValue);
   for (std::uint32_t index = 0; index < members->member_count_; ++index) {
     const MessageMember& member = members->members_[index];
-    result[member.name_] = memberToJson(
-        member, message, std::string("message.") + member.name_);
+    result[member.name_] =
+        memberToJson(member, message, std::string("message.") + member.name_);
   }
   return result;
 }
@@ -452,7 +513,8 @@ Json::Value parseStrictJson(const std::string& input,
   std::string errors;
   if (!reader->parse(input.data(), input.data() + input.size(), &value,
                      &errors)) {
-    permanentError("invalid_json", description + " is not strict JSON: " + errors);
+    permanentError("invalid_json",
+                   description + " is not strict JSON: " + errors);
   }
   return value;
 }

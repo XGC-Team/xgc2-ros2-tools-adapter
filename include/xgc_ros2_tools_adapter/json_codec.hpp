@@ -46,7 +46,8 @@ class DynamicMessage {
 
  private:
   void reset() noexcept;
-  const rosidl_typesupport_introspection_cpp::MessageMembers* members_ = nullptr;
+  const rosidl_typesupport_introspection_cpp::MessageMembers* members_ =
+      nullptr;
   void* data_ = nullptr;
 };
 

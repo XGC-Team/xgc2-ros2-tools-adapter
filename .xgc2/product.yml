@@ -1,0 +1,55 @@
+schema: xgc2.product.v1
+id: xgc2-ros2-tools-adapter
+name: XGC2 ROS2 Tools Adapter
+version: 0.1.0-1
+kind: ros2-apt
+summary: Generic typed ROS2 topic-publish and service-call Adapter Runtime provider.
+groups:
+- ros2
+- communication
+- adapter
+ros:
+  distro: jazzy
+  workspace: ament
+  packages:
+  - xgc_ros2_tools_adapter
+apt:
+  distribution: noble
+  install:
+  - ros-jazzy-xgc2-ros2-tools-adapter
+  packages:
+  - ros-jazzy-xgc2-ros2-tools-adapter
+  depends:
+  - libjsoncpp25
+  - libxgc2-adapter-runtime-client2
+  - ros-jazzy-rclcpp
+  - ros-jazzy-rcpputils
+  - ros-jazzy-rmw
+  - ros-jazzy-rosidl-runtime-cpp
+  - ros-jazzy-rosidl-typesupport-introspection-cpp
+usage:
+  install: |
+    sudo apt update
+    sudo apt install ros-jazzy-xgc2-ros2-tools-adapter
+  smoke_test: |
+    test -x /opt/ros/jazzy/lib/xgc_ros2_tools_adapter/xgc_ros2_tools_adapter_node
+    test -f /usr/share/xgc2/adapter-definitions/xgc2-ros2-tools-adapter.json
+ownership:
+  paths:
+  - /opt/ros/jazzy/share/xgc_ros2_tools_adapter
+  - /opt/ros/jazzy/lib/xgc_ros2_tools_adapter/xgc_ros2_tools_adapter_node
+  - /usr/share/xgc2/adapter-definitions/xgc2-ros2-tools-adapter.json
+  - /usr/share/xgc2/process-definitions/xgc2-ros2-tools-adapter.json
+release:
+  repository: lxk36/xgc2-ros2-tools-adapter
+  ref: jazzy
+  workflow: release.yml
+  ci_workflow: ci.yml
+  requires:
+  - libxgc2-adapter-runtime-client-dev
+  - xgc2-protobuf
+  dependency_policy:
+    libxgc2-adapter-runtime-client-dev: rebuild
+    xgc2-protobuf: rebuild
+  apt_versions:
+    noble: 0.1.0-1

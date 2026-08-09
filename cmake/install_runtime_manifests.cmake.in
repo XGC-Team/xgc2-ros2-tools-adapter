@@ -1,0 +1,24 @@
+set(_artifact "$ENV{DESTDIR}@XGC2_INSTALLED_ARTIFACT@")
+set(_adapter_output
+    "$ENV{DESTDIR}/usr/share/xgc2/adapter-definitions/xgc2-ros2-tools-adapter.json")
+set(_process_output
+    "$ENV{DESTDIR}/usr/share/xgc2/process-definitions/xgc2-ros2-tools-adapter.json")
+get_filename_component(_adapter_directory "${_adapter_output}" DIRECTORY)
+get_filename_component(_process_directory "${_process_output}" DIRECTORY)
+file(MAKE_DIRECTORY "${_adapter_directory}" "${_process_directory}")
+execute_process(
+  COMMAND "@Python3_EXECUTABLE@"
+          "@CMAKE_CURRENT_SOURCE_DIR@/tools/generate_runtime_manifests.py"
+          --executable "${_artifact}"
+          --installed-executable "@XGC2_PROCESS_EXECUTABLE@"
+          --schema-dir "@CMAKE_CURRENT_SOURCE_DIR@/schemas"
+          --version "@PROJECT_VERSION@"
+          --adapter-output "${_adapter_output}"
+          --process-output "${_process_output}"
+  RESULT_VARIABLE _manifest_result
+  ERROR_VARIABLE _manifest_error
+)
+if(NOT _manifest_result EQUAL 0)
+  message(FATAL_ERROR
+          "failed to generate ROS2 Tools Adapter manifests: ${_manifest_error}")
+endif()

@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>xgc_ros2_tools_adapter</name>
+  <version>0.1.0</version>
+  <description>Generic typed ROS2 tools exposed through XGC2 Adapter Runtime.</description>
+  <maintainer email="lxk36@users.noreply.github.com">XGC2</maintainer>
+  <license>BSD-3-Clause</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>rclcpp</depend>
+  <depend>rcpputils</depend>
+  <depend>rmw</depend>
+  <depend>rosidl_runtime_cpp</depend>
+  <depend>rosidl_typesupport_introspection_cpp</depend>
+  <build_depend>libjsoncpp-dev</build_depend>
+  <build_depend>libxgc2-adapter-runtime-client-dev</build_depend>
+  <exec_depend>libjsoncpp25</exec_depend>
+  <exec_depend>libxgc2-adapter-runtime-client2</exec_depend>
+  <test_depend>ament_cmake_gtest</test_depend>
+  <test_depend>rcl_interfaces</test_depend>
+  <test_depend>std_msgs</test_depend>
+  <test_depend>std_srvs</test_depend>
+  <export><build_type>ament_cmake</build_type></export>
+</package>
