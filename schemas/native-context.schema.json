@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "xgc.ros2.tools.v1.NativeContext",
+  "type": "object",
+  "properties": {
+    "domainId": {"type": "integer", "minimum": 0, "maximum": 232},
+    "rmwImplementation": {"type": "string", "pattern": "^(?:|[A-Za-z][A-Za-z0-9_]*)$", "maxLength": 255}
+  },
+  "required": ["domainId", "rmwImplementation"],
+  "additionalProperties": false
+}

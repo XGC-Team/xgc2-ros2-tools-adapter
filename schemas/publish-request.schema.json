@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "xgc.ros2.tools.v1.PublishRequest",
+  "type": "object",
+  "properties": {
+    "topic": {"type": "string", "pattern": "^/[A-Za-z_][A-Za-z0-9_]*(?:/[A-Za-z_][A-Za-z0-9_]*)*$", "maxLength": 1024},
+    "messageType": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*/msg/[A-Za-z][A-Za-z0-9_]*$", "maxLength": 256},
+    "message": {"type": "object"},
+    "qosDepth": {"type": "integer", "minimum": 1, "maximum": 1000},
+    "reliability": {"enum": ["reliable", "best-effort"]},
+    "durability": {"enum": ["volatile", "transient-local"]},
+    "waitForSubscribersMs": {"type": "integer", "minimum": 0, "maximum": 60000}
+  },
+  "required": ["topic", "messageType", "message", "qosDepth", "reliability", "durability", "waitForSubscribersMs"],
+  "additionalProperties": false
+}
