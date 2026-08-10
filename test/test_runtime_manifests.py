@@ -22,7 +22,8 @@ class RuntimeManifestTests(unittest.TestCase):
             executable.write_bytes(b"adapter-binary")
             adapter, process = MODULE.build_manifests(
                 executable,
-                "/opt/ros/jazzy/lib/xgc_ros2_tools_adapter/xgc_ros2_tools_adapter_node",
+                "xgc_ros2_tools_adapter",
+                "xgc_ros2_tools_adapter_node",
                 ROOT / "schemas",
                 "0.1.0",
             )
@@ -38,11 +39,52 @@ class RuntimeManifestTests(unittest.TestCase):
         )
         command = process["definitions"][0]["command"]
         self.assertEqual(
-            "/opt/ros/jazzy/lib/xgc_ros2_tools_adapter/xgc_ros2_tools_adapter_node",
-            command["executable"],
+            {
+                "executable": "ros2",
+                "args": [
+                    "run",
+                    "xgc_ros2_tools_adapter",
+                    "xgc_ros2_tools_adapter_node",
+                    "--adapter-bootstrap-file",
+                    "${adapterBootstrapFile}",
+                ],
+            },
+            command,
         )
         self.assertNotIn("bash", str(command))
         self.assertNotIn("ros2 service call", str(command))
+        self.assertNotIn("/opt/ros", str(command))
+        self.assertNotIn("/home/", str(command))
+
+    def test_package_command_rejects_absolute_or_noncanonical_ros_names(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            executable = Path(directory) / "adapter"
+            executable.write_bytes(b"adapter-binary")
+            invalid_names = [
+                (
+                    "/home/operator/ws/install/xgc_ros2_tools_adapter",
+                    "xgc_ros2_tools_adapter_node",
+                ),
+                (
+                    "xgc_ros2_tools_adapter",
+                    "/opt/ros/jazzy/lib/xgc_ros2_tools_adapter/"
+                    "xgc_ros2_tools_adapter_node",
+                ),
+                ("XGC_ROS2_TOOLS_ADAPTER", "xgc_ros2_tools_adapter_node"),
+                ("xgc_ros2_tools_adapter", "../xgc_ros2_tools_adapter_node"),
+            ]
+            for ros_package, ros_executable in invalid_names:
+                with self.subTest(
+                    ros_package=ros_package, ros_executable=ros_executable
+                ):
+                    with self.assertRaisesRegex(ValueError, "must be canonical"):
+                        MODULE.build_manifests(
+                            executable,
+                            ros_package,
+                            ros_executable,
+                            ROOT / "schemas",
+                            "0.1.0",
+                        )
 
 
 if __name__ == "__main__":

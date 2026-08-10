@@ -93,11 +93,19 @@ def build_contracts(schema_dir: Path) -> tuple[dict[str, dict[str, Any]], list[d
     return references, contracts
 
 
-def build_manifests(executable: Path, installed_executable: str, schema_dir: Path, version: str) -> tuple[dict[str, Any], dict[str, Any]]:
+def build_manifests(
+    executable: Path,
+    ros_package: str,
+    ros_executable: str,
+    schema_dir: Path,
+    version: str,
+) -> tuple[dict[str, Any], dict[str, Any]]:
     if not executable.is_file():
         raise ValueError(f"Adapter executable does not exist: {executable}")
-    if not installed_executable.startswith("/") or not re.fullmatch(r"/[A-Za-z0-9_./+-]+", installed_executable):
-        raise ValueError("installed executable must be a canonical absolute path")
+    if re.fullmatch(r"[a-z][a-z0-9_]*", ros_package) is None:
+        raise ValueError("ROS package name must be canonical")
+    if re.fullmatch(r"[a-z][a-z0-9_]*", ros_executable) is None:
+        raise ValueError("ROS executable name must be canonical")
     if re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version) is None:
         raise ValueError("version must use MAJOR.MINOR.PATCH")
     references, contracts = build_contracts(schema_dir)
@@ -137,7 +145,16 @@ def build_manifests(executable: Path, installed_executable: str, schema_dir: Pat
                 "required": ["adapterBootstrapFile"],
                 "additionalProperties": False,
             },
-            "command": {"executable": installed_executable, "args": ["--adapter-bootstrap-file", "${adapterBootstrapFile}"]},
+            "command": {
+                "executable": "ros2",
+                "args": [
+                    "run",
+                    ros_package,
+                    ros_executable,
+                    "--adapter-bootstrap-file",
+                    "${adapterBootstrapFile}",
+                ],
+            },
             "readiness": {"kind": "process"},
             "liveness": {"kind": "process"},
             "stop": {"gracePeriod": 5000000000},
@@ -156,13 +173,20 @@ def write_json(path: Path, value: Any) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--executable", required=True)
-    parser.add_argument("--installed-executable", required=True)
+    parser.add_argument("--ros-package", required=True)
+    parser.add_argument("--ros-executable", required=True)
     parser.add_argument("--schema-dir", required=True)
     parser.add_argument("--version", required=True)
     parser.add_argument("--adapter-output", required=True)
     parser.add_argument("--process-output", required=True)
     args = parser.parse_args()
-    adapter, process = build_manifests(Path(args.executable), args.installed_executable, Path(args.schema_dir), args.version)
+    adapter, process = build_manifests(
+        Path(args.executable),
+        args.ros_package,
+        args.ros_executable,
+        Path(args.schema_dir),
+        args.version,
+    )
     write_json(Path(args.adapter_output), adapter)
     write_json(Path(args.process_output), process)
     return 0

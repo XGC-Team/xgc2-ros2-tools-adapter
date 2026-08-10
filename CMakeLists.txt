@@ -59,13 +59,8 @@ target_compile_options(${PROJECT_NAME}_node PRIVATE -Wall -Wextra -Wpedantic -We
 target_link_libraries(${PROJECT_NAME}_node ${PROJECT_NAME}_core)
 ament_target_dependencies(${PROJECT_NAME}_node rclcpp)
 
-if(NOT DEFINED ENV{ROS_DISTRO} OR "$ENV{ROS_DISTRO}" STREQUAL "")
-  message(FATAL_ERROR "ROS_DISTRO is required to freeze the installed process path")
-endif()
 set(XGC2_INSTALLED_ARTIFACT
   "${CMAKE_INSTALL_PREFIX}/lib/${PROJECT_NAME}/${PROJECT_NAME}_node")
-set(XGC2_PROCESS_EXECUTABLE
-  "/opt/ros/$ENV{ROS_DISTRO}/lib/${PROJECT_NAME}/${PROJECT_NAME}_node")
 set(XGC2_RUNTIME_MANIFEST_DIR "${CMAKE_CURRENT_BINARY_DIR}/runtime-manifests")
 set(XGC2_ADAPTER_MANIFEST
   "${XGC2_RUNTIME_MANIFEST_DIR}/adapter-definitions/xgc2-ros2-tools-adapter.json")
@@ -76,7 +71,8 @@ add_custom_command(
   COMMAND "${Python3_EXECUTABLE}"
           "${CMAKE_CURRENT_SOURCE_DIR}/tools/generate_runtime_manifests.py"
           --executable "$<TARGET_FILE:${PROJECT_NAME}_node>"
-          --installed-executable "${XGC2_PROCESS_EXECUTABLE}"
+          --ros-package "${PROJECT_NAME}"
+          --ros-executable "${PROJECT_NAME}_node"
           --schema-dir "${CMAKE_CURRENT_SOURCE_DIR}/schemas"
           --version "${PROJECT_VERSION}"
           --adapter-output "${XGC2_ADAPTER_MANIFEST}"
