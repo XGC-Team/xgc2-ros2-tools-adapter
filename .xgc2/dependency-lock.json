@@ -1,0 +1,26 @@
+{
+  "schema": "xgc2.dependency-lock.v1",
+  "planDependencySetDigest": "b5c12cd350d7826dfab48e3d926fa10b72f0b8f72d60cde563e6179285b6182a",
+  "dependencies": [
+    {
+      "id": "libxgc2-adapter-runtime-client-dev",
+      "planAction": "verify",
+      "policy": "rebuild",
+      "repository": "lxk36/xgc2-adapter-runtime-client-cpp",
+      "sourceSha": "92be7f3d58803482bc1711f3ccef1d65b09e5ece",
+      "version": "0.6.0-8",
+      "package": "libxgc2-adapter-runtime-client-dev",
+      "packageVersion": "0.6.0-8~noble"
+    },
+    {
+      "id": "xgc2-protobuf",
+      "planAction": "verify",
+      "policy": "rebuild",
+      "repository": "lxk36/xgc2-protobuf",
+      "sourceSha": "46e6b318720564ca6bf48de77562d455d7c165f9",
+      "version": "0.5.0-11",
+      "package": "xgc2-protobuf-dev",
+      "packageVersion": "0.5.0-11~noble"
+    }
+  ]
+}

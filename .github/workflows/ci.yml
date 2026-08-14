@@ -1,0 +1,131 @@
+name: ci
+
+on:
+  push:
+    branches: [jazzy]
+  pull_request:
+    branches: [jazzy]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: xgc2-ros2-tools-adapter-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  ADAPTER_RUNTIME_CLIENT_DEB_VERSION: 0.6.0-8~noble
+  XGC2_PROTOBUF_DEB_VERSION: 0.5.0-11~noble
+  XGC2_DEPENDENCY_SET_DIGEST: b5c12cd350d7826dfab48e3d926fa10b72f0b8f72d60cde563e6179285b6182a
+
+jobs:
+  compliance:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 2
+      - name: Install compliance dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ripgrep shellcheck python3-yaml
+      - name: Run repository and package compliance
+        run: |
+          set -euo pipefail
+          git diff --check HEAD
+          .xgc2/scripts/check_package_compliance.sh
+
+  cpp-quality:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Compile and test the C++ provider with formatting enforced
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            -e ADAPTER_RUNTIME_CLIENT_DEB_VERSION \
+            -e XGC2_PROTOBUF_DEB_VERSION \
+            -v "$GITHUB_WORKSPACE:/workspace/source:ro" \
+            ros:jazzy-ros-base-noble bash -lc '
+              set -euo pipefail
+              /workspace/source/.xgc2/scripts/configure_xgc2_apt.sh noble
+              apt-get install -y --no-install-recommends \
+                build-essential clang-format cmake libjsoncpp-dev pkg-config python3 \
+                "libxgc2-adapter-runtime-client-dev=${ADAPTER_RUNTIME_CLIENT_DEB_VERSION}" \
+                "xgc2-protobuf-dev=${XGC2_PROTOBUF_DEB_VERSION}" \
+                ros-jazzy-ament-cmake ros-jazzy-ament-cmake-gtest \
+                ros-jazzy-rcl-interfaces ros-jazzy-rclcpp ros-jazzy-rcpputils \
+                ros-jazzy-rmw ros-jazzy-rosidl-runtime-cpp \
+                ros-jazzy-rosidl-typesupport-introspection-cpp \
+                ros-jazzy-std-msgs ros-jazzy-std-srvs
+              set +u
+              source /opt/ros/jazzy/setup.bash
+              set -u
+              /workspace/source/.xgc2/scripts/check_cpp_quality.sh \
+                --work-dir /tmp/xgc2-ros2-tools-adapter-quality
+            '
+
+  build:
+    name: package-tests-debs-${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Build, test, package, install, and inspect
+        env:
+          EXPECTED_ARCH: ${{ matrix.arch }}
+        run: |
+          set -euo pipefail
+          install -d .ci/build-manifests
+          .xgc2/scripts/build_debs_in_docker.sh \
+            --work-dir "$RUNNER_TEMP/xgc2-ros2-tools-adapter-${{ matrix.arch }}" \
+            --output-dir "$GITHUB_WORKSPACE/debs"
+      - name: Create and verify trusted build manifest
+        run: |
+          set -euo pipefail
+          product_version="$(awk -F': *' '/^version:/ {print $2; exit}' .xgc2/product.yml)"
+          python3 .xgc2/scripts/xgc2_artifact_manifest.py build \
+            --deb-dir debs \
+            --output-dir .ci/build-manifests \
+            --product xgc2-ros2-tools-adapter \
+            --expected-package ros-jazzy-xgc2-ros2-tools-adapter \
+            --product-version "$product_version" \
+            --distribution noble \
+            --architecture "${{ matrix.arch }}" \
+            --source-sha "$GITHUB_SHA" \
+            --ci-run-id "$GITHUB_RUN_ID" \
+            --ci-workflow "$GITHUB_WORKFLOW" \
+            --ci-workflow-ref "$GITHUB_WORKFLOW_REF"
+          python3 .xgc2/scripts/xgc2_artifact_manifest.py verify-build \
+            --artifact-dir . \
+            --deb-output-dir .ci/verified-debs \
+            --manifest-output-dir .ci/verified-manifests \
+            --product xgc2-ros2-tools-adapter \
+            --expected-package ros-jazzy-xgc2-ros2-tools-adapter \
+            --product-version "$product_version" \
+            --distribution noble \
+            --architecture "${{ matrix.arch }}" \
+            --source-sha "$GITHUB_SHA" \
+            --ci-run-id "$GITHUB_RUN_ID"
+      - name: Upload trusted build output
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: xgc2-ros2-tools-adapter-noble-${{ matrix.arch }}
+          path: |
+            debs/*.deb
+            debs/xgc2-dependency-evidence.json
+            .ci/build-manifests/*.json
+          retention-days: 14
+          include-hidden-files: true

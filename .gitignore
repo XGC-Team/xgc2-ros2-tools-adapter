@@ -1,7 +1,9 @@
 /build/
+/debs/
 /install/
 /log/
 /.work/
+/.ci/
 __pycache__/
 *.pyc
 compile_commands.json
