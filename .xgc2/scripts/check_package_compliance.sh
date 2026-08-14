@@ -17,7 +17,7 @@ for command in bash python3 rg shellcheck; do
 done
 
 for required in \
-  LICENSE README.md CMakeLists.txt package.xml \
+  LICENSE README.md CMakeLists.txt package.xml .clang-format \
   .github/workflows/ci.yml .github/workflows/release.yml \
   .xgc2/dependency-lock.json .xgc2/product.yml \
   .xgc2/scripts/build_debs_in_docker.sh \
@@ -25,6 +25,7 @@ for required in \
   .xgc2/scripts/check_installed_packages.sh \
   .xgc2/scripts/configure_xgc2_apt.sh \
   .xgc2/scripts/package_debs.sh \
+  .xgc2/scripts/require_clang_format_18.sh \
   .xgc2/scripts/write_dependency_evidence.py \
   .xgc2/scripts/xgc2_artifact_manifest.py; do
   test -f "$REPO_ROOT/$required" || {
@@ -116,8 +117,15 @@ PY
 grep -Fq 'find_package(xgc2_adapter_runtime_client 0.6.0 EXACT REQUIRED CONFIG)' \
   "$REPO_ROOT/CMakeLists.txt"
 grep -Fq 'xgc2::adapter_runtime_client' "$REPO_ROOT/CMakeLists.txt"
+grep -Fq 'readonly FORMATTER=clang-format-18' \
+  "$REPO_ROOT/.xgc2/scripts/require_clang_format_18.sh"
+grep -Fq 'clang-format[[:space:]]version[[:space:]]18[.]' \
+  "$REPO_ROOT/.xgc2/scripts/require_clang_format_18.sh"
+grep -Fq 'require_clang_format_18.sh' \
+  "$REPO_ROOT/.xgc2/scripts/check_cpp_quality.sh"
 for workflow in ci.yml release.yml; do
   path="$REPO_ROOT/.github/workflows/$workflow"
+  grep -Fq 'clang-format-18' "$path"
   grep -Fq 'ubuntu-24.04-arm' "$path"
   grep -Fq '.xgc2/scripts/build_debs_in_docker.sh' "$path"
   grep -Fq 'xgc2_artifact_manifest.py build' "$path"
@@ -125,6 +133,12 @@ for workflow in ci.yml release.yml; do
   grep -Fq 'retention-days: 14' "$path"
   grep -Fq 'actions/upload-artifact@' "$path"
 done
+grep -Fq 'clang-format-18' "$REPO_ROOT/.xgc2/scripts/build_debs_in_docker.sh"
+if rg -n 'build-essential[[:space:]]+clang-format([[:space:]\\]|$)|clang-format[[:space:]]+--' \
+  "$REPO_ROOT/.github" "$REPO_ROOT/.xgc2/scripts"; then
+  echo "unpinned clang-format package or invocation remains" >&2
+  exit 1
+fi
 grep -Fq '.xgc2/scripts/check_cpp_quality.sh' "$REPO_ROOT/.github/workflows/ci.yml"
 for input in expected_version expected_source_sha prepare_action apt_overlay_url \
   dependency_set_digest run_cpp_quality run_source_tests; do
@@ -135,6 +149,30 @@ for script in "$REPO_ROOT"/.xgc2/scripts/*.sh; do
   bash -n "$script"
 done
 shellcheck "$REPO_ROOT"/.xgc2/scripts/*.sh
+
+format_test_bin="$temporary/format-test-bin"
+mkdir -p "$format_test_bin"
+printf '%s\n' '#!/usr/bin/env bash' \
+  'echo "clang-format version 17.0.0"' >"$format_test_bin/clang-format-18"
+chmod 0755 "$format_test_bin/clang-format-18"
+if PATH="$format_test_bin:$PATH" \
+  "$REPO_ROOT/.xgc2/scripts/require_clang_format_18.sh" \
+  >"$temporary/format-version.out" 2>"$temporary/format-version.err"; then
+  echo "formatter contract accepted clang-format 17" >&2
+  exit 1
+fi
+grep -Fq 'required formatter major is 18' "$temporary/format-version.err"
+
+mkdir -p "$temporary/no-formatter"
+if PATH="$temporary/no-formatter" /bin/bash \
+  "$REPO_ROOT/.xgc2/scripts/require_clang_format_18.sh" \
+  >"$temporary/format-missing.out" 2>"$temporary/format-missing.err"; then
+  echo "formatter contract accepted a missing clang-format-18" >&2
+  exit 1
+fi
+grep -Fq 'required formatter is unavailable: clang-format-18' \
+  "$temporary/format-missing.err"
+
 PYTHONPYCACHEPREFIX="$temporary/pycache" python3 -m py_compile \
   "$REPO_ROOT"/tools/*.py \
   "$REPO_ROOT"/.xgc2/scripts/*.py

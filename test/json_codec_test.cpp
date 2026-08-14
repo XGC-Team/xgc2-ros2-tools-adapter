@@ -52,5 +52,5 @@ TEST(JsonCodec, RoundTripsBooleanSequencesThroughFetchAssignIntrospection) {
   EXPECT_FALSE(projected["bool_array_value"][1].asBool());
 }
 
-}  // namespace
-}  // namespace xgc_ros2_tools_adapter
+} // namespace
+} // namespace xgc_ros2_tools_adapter

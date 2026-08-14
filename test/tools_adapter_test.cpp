@@ -22,7 +22,7 @@ namespace {
 constexpr char kScopeKey[] =
     "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
 
-xgc::v1::SchemaReference schema(const contract::Schema& source) {
+xgc::v1::SchemaReference schema(const contract::Schema &source) {
   xgc::v1::SchemaReference result;
   result.set_message_id(source.message_id);
   result.set_type_name(source.type_name);
@@ -31,8 +31,9 @@ xgc::v1::SchemaReference schema(const contract::Schema& source) {
   return result;
 }
 
-xgc::adapter::v1::AdapterInstanceSpec instanceSpec(
-    std::uint32_t domain_id = 0, const std::string& rmw_implementation = "") {
+xgc::adapter::v1::AdapterInstanceSpec
+instanceSpec(std::uint32_t domain_id = 0,
+             const std::string &rmw_implementation = "") {
   xgc::adapter::v1::AdapterInstanceSpec spec;
   *spec.mutable_configuration()->mutable_schema() =
       schema(contract::kConfiguration);
@@ -51,7 +52,7 @@ xgc::adapter::v1::AdapterInstanceSpec instanceSpec(
   return spec;
 }
 
-xgc::adapter::v1::EnabledCapability grant(const contract::Endpoint& endpoint) {
+xgc::adapter::v1::EnabledCapability grant(const contract::Endpoint &endpoint) {
   xgc::adapter::v1::EnabledCapability result;
   result.set_capability_id(endpoint.capability_id);
   result.set_contract_version(endpoint.contract_version);
@@ -60,10 +61,10 @@ xgc::adapter::v1::EnabledCapability grant(const contract::Endpoint& endpoint) {
   return result;
 }
 
-xgc::adapter::v1::OperationRequest operation(
-    const std::string& json, const contract::Endpoint& endpoint) {
+xgc::adapter::v1::OperationRequest
+operation(const std::string &json, const contract::Endpoint &endpoint) {
   xgc::adapter::v1::OperationRequest request;
-  auto* context = request.mutable_context();
+  auto *context = request.mutable_context();
   context->set_capability_id(endpoint.capability_id);
   context->set_contract_version(endpoint.contract_version);
   context->set_contract_digest(endpoint.contract_digest);
@@ -82,7 +83,7 @@ xgc::adapter::v1::OperationRequest operation(
   return request;
 }
 
-Json::Value parseJson(const std::string& input) {
+Json::Value parseJson(const std::string &input) {
   Json::CharReaderBuilder builder;
   std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
   Json::Value value;
@@ -110,10 +111,10 @@ TEST(NativeContext, ParsesExactConfigurationAndRejectsScopeDrift) {
 }
 
 class ToolsAdapterIntegration : public ::testing::Test {
- protected:
+protected:
   static void SetUpTestSuite() {
     int argc = 0;
-    char** argv = nullptr;
+    char **argv = nullptr;
     rclcpp::init(argc, argv);
     adapter_node_ = std::make_shared<rclcpp::Node>(
         "xgc_ros2_tools_adapter_integration_adapter");
@@ -144,7 +145,7 @@ class ToolsAdapterIntegration : public ::testing::Test {
                                           NativeContext{0, "", kScopeKey});
   }
 
-  void activate(ToolsAdapter* adapter, const contract::Endpoint& endpoint) {
+  void activate(ToolsAdapter *adapter, const contract::Endpoint &endpoint) {
     auto spec = instanceSpec();
     std::string error;
     ASSERT_TRUE(adapter->ApplyInstanceSpec(spec, &error)) << error;
@@ -273,5 +274,5 @@ TEST_F(ToolsAdapterIntegration,
   EXPECT_EQ("ros_type_support_unavailable", result.error.code());
 }
 
-}  // namespace
-}  // namespace xgc_ros2_tools_adapter
+} // namespace
+} // namespace xgc_ros2_tools_adapter

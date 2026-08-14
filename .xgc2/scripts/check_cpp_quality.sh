@@ -12,22 +12,27 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-for command in clang-format cmake ctest; do
+for command in cmake ctest; do
   command -v "$command" >/dev/null 2>&1 || {
     echo "missing C++ quality dependency: $command" >&2
     exit 1
   }
 done
+FORMATTER="$("$SCRIPT_DIR/require_clang_format_18.sh")"
+readonly FORMATTER
 
 mapfile -t cpp_files < <(
   find "$REPO_ROOT/include" "$REPO_ROOT/src" "$REPO_ROOT/test" \
-    -type f \( -name '*.cpp' -o -name '*.hpp' \) -print | sort
+    -type f \( \
+      -name '*.c' -o -name '*.cc' -o -name '*.cpp' -o -name '*.cxx' -o \
+      -name '*.h' -o -name '*.hh' -o -name '*.hpp' -o -name '*.hxx' \
+    \) -print | sort
 )
 (( ${#cpp_files[@]} > 0 )) || {
   echo "C++ quality gate found no source files" >&2
   exit 1
 }
-clang-format --dry-run --Werror "${cpp_files[@]}"
+"$FORMATTER" --dry-run --Werror "${cpp_files[@]}"
 
 rm -rf "$WORK_DIR"
 cmake -S "$REPO_ROOT" -B "$WORK_DIR" \

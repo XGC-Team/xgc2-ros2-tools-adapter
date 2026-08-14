@@ -22,7 +22,7 @@ void handleSignal(int) {
   stop_requested.store(true, std::memory_order_release);
 }
 
-std::string parseBootstrapPath(int argc, char** argv) {
+std::string parseBootstrapPath(int argc, char **argv) {
   if (argc == 2 &&
       (std::string(argv[1]) == "--help" || std::string(argv[1]) == "-h")) {
     std::cout << "Usage: xgc_ros2_tools_adapter_node "
@@ -38,27 +38,27 @@ std::string parseBootstrapPath(int argc, char** argv) {
 }
 
 void logRuntime(xgc2::adapter_runtime::LogLevel level,
-                const std::string& message) {
+                const std::string &message) {
   const auto logger = rclcpp::get_logger("xgc_ros2_tools_adapter.runtime");
   switch (level) {
-    case xgc2::adapter_runtime::LogLevel::kDebug:
-      RCLCPP_DEBUG(logger, "%s", message.c_str());
-      break;
-    case xgc2::adapter_runtime::LogLevel::kInfo:
-      RCLCPP_INFO(logger, "%s", message.c_str());
-      break;
-    case xgc2::adapter_runtime::LogLevel::kWarning:
-      RCLCPP_WARN(logger, "%s", message.c_str());
-      break;
-    case xgc2::adapter_runtime::LogLevel::kError:
-      RCLCPP_ERROR(logger, "%s", message.c_str());
-      break;
+  case xgc2::adapter_runtime::LogLevel::kDebug:
+    RCLCPP_DEBUG(logger, "%s", message.c_str());
+    break;
+  case xgc2::adapter_runtime::LogLevel::kInfo:
+    RCLCPP_INFO(logger, "%s", message.c_str());
+    break;
+  case xgc2::adapter_runtime::LogLevel::kWarning:
+    RCLCPP_WARN(logger, "%s", message.c_str());
+    break;
+  case xgc2::adapter_runtime::LogLevel::kError:
+    RCLCPP_ERROR(logger, "%s", message.c_str());
+    break;
   }
 }
 
-}  // namespace
+} // namespace
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
   try {
     const std::string bootstrap_path = parseBootstrapPath(argc, argv);
     auto runtime_config =
@@ -85,18 +85,18 @@ int main(int argc, char** argv) {
     runtime_config.dispatch_workers = 16;
 
     xgc2::adapter_runtime::ClientCallbacks callbacks;
-    callbacks.apply_instance_spec = [&adapter](const auto& spec,
-                                               std::string* apply_error) {
+    callbacks.apply_instance_spec = [&adapter](const auto &spec,
+                                               std::string *apply_error) {
       return adapter.ApplyInstanceSpec(spec, apply_error);
     };
     callbacks.clear_instance_spec = [&adapter] { adapter.ClearInstanceSpec(); };
-    callbacks.stop_requested = [](const auto& request) {
+    callbacks.stop_requested = [](const auto &request) {
       RCLCPP_INFO(rclcpp::get_logger("xgc_ros2_tools_adapter"),
                   "Adapter Runtime requested process stop: %s",
                   request.reason().c_str());
       stop_requested.store(true, std::memory_order_release);
     };
-    callbacks.session_lost = [](const std::string& reason) {
+    callbacks.session_lost = [](const std::string &reason) {
       RCLCPP_ERROR(rclcpp::get_logger("xgc_ros2_tools_adapter"),
                    "Adapter Runtime session was lost: %s", reason.c_str());
       session_lost.store(true, std::memory_order_release);
@@ -128,7 +128,7 @@ int main(int argc, char** argv) {
     executor->remove_node(node);
     rclcpp::shutdown();
     return session_lost.load(std::memory_order_acquire) ? 2 : 0;
-  } catch (const std::exception& exception) {
+  } catch (const std::exception &exception) {
     std::cerr << "xgc_ros2_tools_adapter: " << exception.what() << '\n';
     if (rclcpp::ok()) {
       rclcpp::shutdown();

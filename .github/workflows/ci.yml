@@ -55,7 +55,7 @@ jobs:
               set -euo pipefail
               /workspace/source/.xgc2/scripts/configure_xgc2_apt.sh noble
               apt-get install -y --no-install-recommends \
-                build-essential clang-format cmake libjsoncpp-dev pkg-config python3 \
+                build-essential clang-format-18 cmake libjsoncpp-dev pkg-config python3 \
                 "libxgc2-adapter-runtime-client-dev=${ADAPTER_RUNTIME_CLIENT_DEB_VERSION}" \
                 "xgc2-protobuf-dev=${XGC2_PROTOBUF_DEB_VERSION}" \
                 ros-jazzy-ament-cmake ros-jazzy-ament-cmake-gtest \

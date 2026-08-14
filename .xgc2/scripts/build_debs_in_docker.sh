@@ -122,7 +122,7 @@ docker run --rm \
     [[ -z "$XGC2_PROTOBUF_DEB_VERSION" ]] || \
       protobuf_package="${protobuf_package}=${XGC2_PROTOBUF_DEB_VERSION}"
     apt-get install -y --no-install-recommends \
-      build-essential clang-format cmake dpkg-dev fakeroot file libjsoncpp-dev \
+      build-essential clang-format-18 cmake dpkg-dev fakeroot file libjsoncpp-dev \
       pkg-config python3 python3-yaml ripgrep rsync shellcheck \
       "$runtime_package" "$protobuf_package" \
       ros-jazzy-ament-cmake ros-jazzy-ament-cmake-gtest \

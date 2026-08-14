@@ -134,7 +134,7 @@ jobs:
               [[ -z "$XGC2_PROTOBUF_DEB_VERSION" ]] || \
                 protobuf_package="${protobuf_package}=${XGC2_PROTOBUF_DEB_VERSION}"
               apt-get install -y --no-install-recommends \
-                build-essential clang-format cmake libjsoncpp-dev pkg-config python3 \
+                build-essential clang-format-18 cmake libjsoncpp-dev pkg-config python3 \
                 "$runtime_package" "$protobuf_package" \
                 ros-jazzy-ament-cmake ros-jazzy-ament-cmake-gtest \
                 ros-jazzy-rcl-interfaces ros-jazzy-rclcpp ros-jazzy-rcpputils \
@@ -172,7 +172,7 @@ jobs:
               [[ -z "$XGC2_PROTOBUF_DEB_VERSION" ]] || \
                 protobuf_package="${protobuf_package}=${XGC2_PROTOBUF_DEB_VERSION}"
               apt-get install -y --no-install-recommends \
-                build-essential clang-format cmake libjsoncpp-dev pkg-config python3 \
+                build-essential clang-format-18 cmake libjsoncpp-dev pkg-config python3 \
                 "$runtime_package" "$protobuf_package" \
                 ros-jazzy-ament-cmake ros-jazzy-ament-cmake-gtest \
                 ros-jazzy-rcl-interfaces ros-jazzy-rclcpp ros-jazzy-rcpputils \

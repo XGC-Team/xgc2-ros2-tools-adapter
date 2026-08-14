@@ -31,38 +31,38 @@ constexpr std::size_t kMaximumConfigurationBytes = 16u * 1024u;
 constexpr std::size_t kMaximumRosNameBytes = 1024;
 constexpr std::size_t kMaximumRosTypeBytes = 256;
 
-const std::regex& messageTypePattern() {
+const std::regex &messageTypePattern() {
   static const std::regex pattern(
       "^[A-Za-z][A-Za-z0-9_]*/msg/[A-Za-z][A-Za-z0-9_]*$");
   return pattern;
 }
 
-const std::regex& serviceTypePattern() {
+const std::regex &serviceTypePattern() {
   static const std::regex pattern(
       "^[A-Za-z][A-Za-z0-9_]*/srv/[A-Za-z][A-Za-z0-9_]*$");
   return pattern;
 }
 
-const std::regex& rmwPattern() {
+const std::regex &rmwPattern() {
   static const std::regex pattern("^[A-Za-z][A-Za-z0-9_]*$");
   return pattern;
 }
 
-const std::regex& scopeKeyPattern() {
+const std::regex &scopeKeyPattern() {
   static const std::regex pattern("^sha256:[0-9a-f]{64}$");
   return pattern;
 }
 
-void requireObject(const Json::Value& value, const std::string& field) {
+void requireObject(const Json::Value &value, const std::string &field) {
   if (!value.isObject()) {
     permanentError("invalid_request", field + " must be a JSON object");
   }
 }
 
-void rejectUnknownFields(const Json::Value& value,
-                         const std::set<std::string>& allowed,
-                         const std::string& description) {
-  for (const auto& member : value.getMemberNames()) {
+void rejectUnknownFields(const Json::Value &value,
+                         const std::set<std::string> &allowed,
+                         const std::string &description) {
+  for (const auto &member : value.getMemberNames()) {
     if (allowed.count(member) == 0) {
       permanentError("invalid_request",
                      description + " contains unknown field '" + member + "'");
@@ -70,7 +70,7 @@ void rejectUnknownFields(const Json::Value& value,
   }
 }
 
-std::string requiredString(const Json::Value& value, const std::string& field) {
+std::string requiredString(const Json::Value &value, const std::string &field) {
   if (!value.isMember(field) || !value[field].isString() ||
       value[field].asString().empty()) {
     permanentError("invalid_request", field + " must be a non-empty string");
@@ -78,15 +78,15 @@ std::string requiredString(const Json::Value& value, const std::string& field) {
   return value[field].asString();
 }
 
-std::string requiredPossiblyEmptyString(const Json::Value& value,
-                                        const std::string& field) {
+std::string requiredPossiblyEmptyString(const Json::Value &value,
+                                        const std::string &field) {
   if (!value.isMember(field) || !value[field].isString()) {
     permanentError("invalid_configuration", field + " must be a string");
   }
   return value[field].asString();
 }
 
-std::uint32_t requiredUInt(const Json::Value& value, const std::string& field,
+std::uint32_t requiredUInt(const Json::Value &value, const std::string &field,
                            std::uint32_t minimum, std::uint32_t maximum) {
   if (!value.isMember(field) || !value[field].isIntegral() ||
       (value[field].isInt64() && value[field].asInt64() < 0)) {
@@ -101,7 +101,7 @@ std::uint32_t requiredUInt(const Json::Value& value, const std::string& field,
   return static_cast<std::uint32_t>(parsed);
 }
 
-void validateGraphName(const std::string& value, const std::string& field) {
+void validateGraphName(const std::string &value, const std::string &field) {
   if (value.empty() || value.front() != '/' ||
       value.size() > kMaximumRosNameBytes) {
     permanentError("invalid_ros_name",
@@ -117,15 +117,15 @@ void validateGraphName(const std::string& value, const std::string& field) {
   }
 }
 
-void validateType(const std::string& value, const std::regex& pattern,
-                  const std::string& field, const std::string& syntax) {
+void validateType(const std::string &value, const std::regex &pattern,
+                  const std::string &field, const std::string &syntax) {
   if (value.size() > kMaximumRosTypeBytes ||
       !std::regex_match(value, pattern)) {
     permanentError("invalid_ros_type", field + " must use " + syntax);
   }
 }
 
-void setEnvironment(const char* name, const std::string& value) {
+void setEnvironment(const char *name, const std::string &value) {
   const int result =
       value.empty() ? ::unsetenv(name) : ::setenv(name, value.c_str(), 1);
   if (result != 0) {
@@ -134,10 +134,10 @@ void setEnvironment(const char* name, const std::string& value) {
   }
 }
 
-const xgc::adapter::v1::CapabilityEndpointContract* findEndpoint(
-    const xgc::adapter::v1::CapabilityContract& value,
-    const std::string& endpoint_id) {
-  for (const auto& endpoint : value.endpoints()) {
+const xgc::adapter::v1::CapabilityEndpointContract *
+findEndpoint(const xgc::adapter::v1::CapabilityContract &value,
+             const std::string &endpoint_id) {
+  for (const auto &endpoint : value.endpoints()) {
     if (endpoint.endpoint_id() == endpoint_id) {
       return &endpoint;
     }
@@ -145,15 +145,15 @@ const xgc::adapter::v1::CapabilityEndpointContract* findEndpoint(
   return nullptr;
 }
 
-bool schemaMatches(const xgc::v1::SchemaReference& actual,
-                   const contract::Schema& expected) {
+bool schemaMatches(const xgc::v1::SchemaReference &actual,
+                   const contract::Schema &expected) {
   return actual.message_id() == expected.message_id &&
          actual.type_name() == expected.type_name &&
          actual.schema_version() == expected.version &&
          actual.schema_fingerprint() == expected.fingerprint;
 }
 
-xgc::v1::SchemaReference schemaReference(const contract::Schema& value) {
+xgc::v1::SchemaReference schemaReference(const contract::Schema &value) {
   xgc::v1::SchemaReference result;
   result.set_message_id(value.message_id);
   result.set_type_name(value.type_name);
@@ -163,9 +163,9 @@ xgc::v1::SchemaReference schemaReference(const contract::Schema& value) {
 }
 
 bool validateExpectedContract(
-    const xgc::adapter::v1::CapabilityContract& actual,
-    const contract::Endpoint& expected, std::string* error) {
-  const auto reject = [error](const std::string& message) {
+    const xgc::adapter::v1::CapabilityContract &actual,
+    const contract::Endpoint &expected, std::string *error) {
+  const auto reject = [error](const std::string &message) {
     if (error != nullptr) {
       *error = message;
     }
@@ -178,7 +178,7 @@ bool validateExpectedContract(
     return reject(
         "capability identity or digest differs from compiled contract");
   }
-  const auto* endpoint = findEndpoint(actual, expected.endpoint_id);
+  const auto *endpoint = findEndpoint(actual, expected.endpoint_id);
   if (endpoint == nullptr || !endpoint->has_input_schema() ||
       !endpoint->has_output_schema() ||
       !schemaMatches(endpoint->input_schema(), expected.input_schema) ||
@@ -192,7 +192,7 @@ bool validateExpectedContract(
       !endpoint->cancellation_supported() || !endpoint->deadline_required()) {
     return reject("capability endpoint differs from compiled contract");
   }
-  const auto& limits = endpoint->limits();
+  const auto &limits = endpoint->limits();
   if (endpoint->default_timeout_ms() != expected.default_timeout_ms ||
       endpoint->maximum_timeout_ms() != expected.maximum_timeout_ms ||
       limits.maximum_request_bytes() != expected.limits.maximum_request_bytes ||
@@ -207,9 +207,9 @@ bool validateExpectedContract(
   return true;
 }
 
-bool validateCapabilityGrant(const xgc::adapter::v1::EnabledCapability& grant,
-                             const contract::Endpoint& expected,
-                             std::string* error) {
+bool validateCapabilityGrant(const xgc::adapter::v1::EnabledCapability &grant,
+                             const contract::Endpoint &expected,
+                             std::string *error) {
   if (grant.capability_id() != expected.capability_id ||
       grant.contract_version() != expected.contract_version ||
       grant.contract_digest() != expected.contract_digest ||
@@ -223,8 +223,8 @@ bool validateCapabilityGrant(const xgc::adapter::v1::EnabledCapability& grant,
   return true;
 }
 
-void validateInvocationContext(const xgc::adapter::v1::WorkContext& context,
-                               const contract::Endpoint& expected) {
+void validateInvocationContext(const xgc::adapter::v1::WorkContext &context,
+                               const contract::Endpoint &expected) {
   if (context.capability_id() != expected.capability_id ||
       context.contract_version() != expected.contract_version ||
       context.contract_digest() != expected.contract_digest ||
@@ -234,32 +234,32 @@ void validateInvocationContext(const xgc::adapter::v1::WorkContext& context,
   }
 }
 
-std::chrono::system_clock::time_point workDeadline(
-    const xgc::adapter::v1::WorkContext& context) {
+std::chrono::system_clock::time_point
+workDeadline(const xgc::adapter::v1::WorkContext &context) {
   return std::chrono::system_clock::time_point(
       std::chrono::nanoseconds(context.deadline().deadline_unix_nanos()));
 }
 
-void requireBeforeDeadline(const xgc::adapter::v1::WorkContext& context,
-                           const std::string& code,
-                           const std::string& message) {
+void requireBeforeDeadline(const xgc::adapter::v1::WorkContext &context,
+                           const std::string &code,
+                           const std::string &message) {
   if (std::chrono::system_clock::now() >= workDeadline(context)) {
     deadlineError(code, message);
   }
 }
 
-std::uint64_t elapsedMilliseconds(
-    std::chrono::steady_clock::time_point started) {
+std::uint64_t
+elapsedMilliseconds(std::chrono::steady_clock::time_point started) {
   return static_cast<std::uint64_t>(
       std::chrono::duration_cast<std::chrono::milliseconds>(
           std::chrono::steady_clock::now() - started)
           .count());
 }
 
-}  // namespace
+} // namespace
 
 NativeContext NativeContext::FromInstanceSpec(
-    const xgc::adapter::v1::AdapterInstanceSpec& spec) {
+    const xgc::adapter::v1::AdapterInstanceSpec &spec) {
   if (!spec.has_configuration() ||
       spec.configuration().encoding() != xgc::v1::PAYLOAD_ENCODING_JSON ||
       !spec.configuration().has_schema() ||
@@ -301,7 +301,7 @@ NativeContext NativeContext::FromInstanceSpec(
                    "instance scope must be a canonical ros2-native-context");
   }
   context.scope_key = spec.scope().key();
-  const auto& attributes = spec.scope().attributes();
+  const auto &attributes = spec.scope().attributes();
   const auto domain = attributes.find("domain-id");
   const auto rmw = attributes.find("rmw-implementation");
   const std::string scoped_rmw = rmw == attributes.end() ? "" : rmw->second;
@@ -321,7 +321,7 @@ void NativeContext::ApplyEnvironment() const {
   setEnvironment("RMW_IMPLEMENTATION", rmw_implementation);
 }
 
-bool NativeContext::operator==(const NativeContext& other) const noexcept {
+bool NativeContext::operator==(const NativeContext &other) const noexcept {
   return domain_id == other.domain_id &&
          rmw_implementation == other.rmw_implementation &&
          scope_key == other.scope_key;
@@ -336,7 +336,7 @@ ToolsAdapter::ToolsAdapter(rclcpp::Node::SharedPtr node,
 }
 
 bool ToolsAdapter::ApplyInstanceSpec(
-    const xgc::adapter::v1::AdapterInstanceSpec& spec, std::string* error) {
+    const xgc::adapter::v1::AdapterInstanceSpec &spec, std::string *error) {
   try {
     if (!(NativeContext::FromInstanceSpec(spec) == native_context_)) {
       if (error != nullptr) {
@@ -346,7 +346,7 @@ bool ToolsAdapter::ApplyInstanceSpec(
     }
     instance_spec_applied_.store(true, std::memory_order_release);
     return true;
-  } catch (const std::exception& exception) {
+  } catch (const std::exception &exception) {
     if (error != nullptr) {
       *error = exception.what();
     }
@@ -361,8 +361,8 @@ void ToolsAdapter::ClearInstanceSpec() noexcept {
 }
 
 bool ToolsAdapter::StartPublishCapability(
-    const xgc::adapter::v1::AdapterInstanceSpec& spec,
-    const xgc::adapter::v1::EnabledCapability& grant, std::string* error) {
+    const xgc::adapter::v1::AdapterInstanceSpec &spec,
+    const xgc::adapter::v1::EnabledCapability &grant, std::string *error) {
   try {
     if (!instance_spec_applied_.load(std::memory_order_acquire) ||
         !(NativeContext::FromInstanceSpec(spec) == native_context_) ||
@@ -378,7 +378,7 @@ bool ToolsAdapter::StartPublishCapability(
       return false;
     }
     return true;
-  } catch (const std::exception& exception) {
+  } catch (const std::exception &exception) {
     if (error != nullptr) {
       *error = exception.what();
     }
@@ -391,8 +391,8 @@ void ToolsAdapter::StopPublishCapability() noexcept {
 }
 
 bool ToolsAdapter::StartServiceCapability(
-    const xgc::adapter::v1::AdapterInstanceSpec& spec,
-    const xgc::adapter::v1::EnabledCapability& grant, std::string* error) {
+    const xgc::adapter::v1::AdapterInstanceSpec &spec,
+    const xgc::adapter::v1::EnabledCapability &grant, std::string *error) {
   try {
     if (!instance_spec_applied_.load(std::memory_order_acquire) ||
         !(NativeContext::FromInstanceSpec(spec) == native_context_) ||
@@ -408,7 +408,7 @@ bool ToolsAdapter::StartServiceCapability(
       return false;
     }
     return true;
-  } catch (const std::exception& exception) {
+  } catch (const std::exception &exception) {
     if (error != nullptr) {
       *error = exception.what();
     }
@@ -420,10 +420,10 @@ void ToolsAdapter::StopServiceCapability() noexcept {
   service_enabled_.store(false, std::memory_order_release);
 }
 
-Json::Value ToolsAdapter::parseInput(
-    const xgc::v1::Payload& payload,
-    const xgc::v1::SchemaReference& expected_schema,
-    std::uint32_t maximum_request_bytes) const {
+Json::Value
+ToolsAdapter::parseInput(const xgc::v1::Payload &payload,
+                         const xgc::v1::SchemaReference &expected_schema,
+                         std::uint32_t maximum_request_bytes) const {
   if (payload.encoding() != xgc::v1::PAYLOAD_ENCODING_JSON ||
       !payload.has_schema() ||
       payload.schema().SerializeAsString() !=
@@ -441,14 +441,14 @@ Json::Value ToolsAdapter::parseInput(
 }
 
 void ToolsAdapter::validateSubject(
-    const xgc::adapter::v1::WorkContext& context) const {
+    const xgc::adapter::v1::WorkContext &context) const {
   if (!context.has_subject() ||
       context.subject().kind() != "ros2-native-context" ||
       context.subject().key() != native_context_.scope_key) {
     permanentError("invalid_subject",
                    "invocation subject must match this ROS2 native context");
   }
-  const auto& attributes = context.subject().attributes();
+  const auto &attributes = context.subject().attributes();
   const auto domain = attributes.find("domain-id");
   const auto rmw = attributes.find("rmw-implementation");
   const std::string scoped_rmw = rmw == attributes.end() ? "" : rmw->second;
@@ -465,8 +465,8 @@ void ToolsAdapter::validateSubject(
 }
 
 xgc2::adapter_runtime::OperationResult ToolsAdapter::Publish(
-    const xgc::adapter::v1::OperationRequest& request,
-    const xgc2::adapter_runtime::CancellationToken& cancellation) {
+    const xgc::adapter::v1::OperationRequest &request,
+    const xgc2::adapter_runtime::CancellationToken &cancellation) {
   try {
     if (!publish_enabled_.load(std::memory_order_acquire)) {
       rejectedError("publish_capability_disabled",
@@ -551,10 +551,10 @@ xgc2::adapter_runtime::OperationResult ToolsAdapter::Publish(
                           "publish deadline elapsed before dispatch");
     try {
       publisher->publish(serialized);
-    } catch (const std::exception& exception) {
-      uncertainError(
-          "publish_outcome_unknown",
-          "ROS2 publish outcome is unknown: " + std::string(exception.what()));
+    } catch (const std::exception &exception) {
+      uncertainError("publish_outcome_unknown",
+                     "ROS2 publish outcome is unknown: " +
+                         std::string(exception.what()));
     }
     Json::Value output(Json::objectValue);
     output["event"] = "published";
@@ -565,14 +565,14 @@ xgc2::adapter_runtime::OperationResult ToolsAdapter::Publish(
     output["subscriberCount"] = Json::UInt64(subscriber_count);
     return success(output, schemaReference(contract::kPublish.output_schema),
                    contract::kPublish.limits.maximum_response_bytes);
-  } catch (const std::exception& exception) {
+  } catch (const std::exception &exception) {
     return failure(exception);
   }
 }
 
 xgc2::adapter_runtime::OperationResult ToolsAdapter::CallService(
-    const xgc::adapter::v1::OperationRequest& request,
-    const xgc2::adapter_runtime::CancellationToken& cancellation) {
+    const xgc::adapter::v1::OperationRequest &request,
+    const xgc2::adapter_runtime::CancellationToken &cancellation) {
   try {
     if (!service_enabled_.load(std::memory_order_acquire)) {
       rejectedError("service_capability_disabled",
@@ -657,14 +657,15 @@ xgc2::adapter_runtime::OperationResult ToolsAdapter::CallService(
     output["durationMs"] = Json::UInt64(elapsedMilliseconds(started));
     return success(output, schemaReference(contract::kService.output_schema),
                    contract::kService.limits.maximum_response_bytes);
-  } catch (const std::exception& exception) {
+  } catch (const std::exception &exception) {
     return failure(exception);
   }
 }
 
-xgc2::adapter_runtime::OperationResult ToolsAdapter::success(
-    const Json::Value& value, const xgc::v1::SchemaReference& output_schema,
-    std::uint32_t maximum_response_bytes) const {
+xgc2::adapter_runtime::OperationResult
+ToolsAdapter::success(const Json::Value &value,
+                      const xgc::v1::SchemaReference &output_schema,
+                      std::uint32_t maximum_response_bytes) const {
   xgc::v1::Payload payload;
   *payload.mutable_schema() = output_schema;
   payload.set_encoding(xgc::v1::PAYLOAD_ENCODING_JSON);
@@ -677,9 +678,9 @@ xgc2::adapter_runtime::OperationResult ToolsAdapter::success(
                                                          true);
 }
 
-xgc2::adapter_runtime::OperationResult ToolsAdapter::failure(
-    const std::exception& exception) const {
-  const auto* typed = dynamic_cast<const ToolsError*>(&exception);
+xgc2::adapter_runtime::OperationResult
+ToolsAdapter::failure(const std::exception &exception) const {
+  const auto *typed = dynamic_cast<const ToolsError *>(&exception);
   if (typed == nullptr) {
     return xgc2::adapter_runtime::OperationResult::Failure(
         xgc::adapter::v1::ERROR_CLASS_TRANSIENT, "internal_error",
@@ -704,8 +705,8 @@ xgc2::adapter_runtime::OperationResult ToolsAdapter::failure(
       error_class, typed->code(), typed->what());
 }
 
-bool BindCapabilities(xgc2::adapter_runtime::ClientConfig* config,
-                      ToolsAdapter* adapter, std::string* error) {
+bool BindCapabilities(xgc2::adapter_runtime::ClientConfig *config,
+                      ToolsAdapter *adapter, std::string *error) {
   if (config == nullptr || adapter == nullptr ||
       config->capabilities().size() != 2) {
     if (error != nullptr) {
@@ -716,10 +717,10 @@ bool BindCapabilities(xgc2::adapter_runtime::ClientConfig* config,
   }
   bool publish_bound = false;
   bool service_bound = false;
-  for (const auto& binding : config->capabilities()) {
-    const auto& bootstrap_contract = binding.contract;
-    const contract::Endpoint* expected = nullptr;
-    bool* bound = nullptr;
+  for (const auto &binding : config->capabilities()) {
+    const auto &bootstrap_contract = binding.contract;
+    const contract::Endpoint *expected = nullptr;
+    bool *bound = nullptr;
     if (bootstrap_contract.capability_id() ==
         contract::kPublish.capability_id) {
       expected = &contract::kPublish;
@@ -740,21 +741,21 @@ bool BindCapabilities(xgc2::adapter_runtime::ClientConfig* config,
     }
     xgc2::adapter_runtime::CapabilityCallbacks callbacks;
     if (expected == &contract::kPublish) {
-      callbacks.start = [adapter](const auto& spec, const auto& grant,
-                                  std::string* start_error) {
+      callbacks.start = [adapter](const auto &spec, const auto &grant,
+                                  std::string *start_error) {
         return adapter->StartPublishCapability(spec, grant, start_error);
       };
       callbacks.stop = [adapter] { adapter->StopPublishCapability(); };
-      callbacks.operation = [adapter](const auto& work, const auto& token) {
+      callbacks.operation = [adapter](const auto &work, const auto &token) {
         return adapter->Publish(work, token);
       };
     } else {
-      callbacks.start = [adapter](const auto& spec, const auto& grant,
-                                  std::string* start_error) {
+      callbacks.start = [adapter](const auto &spec, const auto &grant,
+                                  std::string *start_error) {
         return adapter->StartServiceCapability(spec, grant, start_error);
       };
       callbacks.stop = [adapter] { adapter->StopServiceCapability(); };
-      callbacks.operation = [adapter](const auto& work, const auto& token) {
+      callbacks.operation = [adapter](const auto &work, const auto &token) {
         return adapter->CallService(work, token);
       };
     }
@@ -769,4 +770,4 @@ bool BindCapabilities(xgc2::adapter_runtime::ClientConfig* config,
   return publish_bound && service_bound;
 }
 
-}  // namespace xgc_ros2_tools_adapter
+} // namespace xgc_ros2_tools_adapter
