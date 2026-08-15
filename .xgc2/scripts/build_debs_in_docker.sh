@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 ROS_DISTRO="${XGC2_ROS_DISTRO:-jazzy}"
 UBUNTU_CODENAME="${XGC2_UBUNTU_CODENAME:-noble}"
-DOCKER_IMAGE="${DOCKER_IMAGE:-ros:${ROS_DISTRO}-ros-base-${UBUNTU_CODENAME}}"
+DOCKER_IMAGE="${DOCKER_IMAGE:-ghcr.io/xgc-team/xgc2-images/xgc2-build-noble-ros-jazzy:1.0.0}"
 WORK_DIR="${WORK_DIR:-${REPO_ROOT}/.work/docker-${ROS_DISTRO}}"
 OUTPUT_DIR="${OUTPUT_DIR:-${REPO_ROOT}/debs}"
 EXPECTED_ARCH="${EXPECTED_ARCH:-}"
@@ -122,14 +122,7 @@ docker run --rm \
     [[ -z "$XGC2_PROTOBUF_DEB_VERSION" ]] || \
       protobuf_package="${protobuf_package}=${XGC2_PROTOBUF_DEB_VERSION}"
     apt-get install -y --no-install-recommends \
-      build-essential clang-format-18 cmake dpkg-dev fakeroot file libjsoncpp-dev \
-      pkg-config python3 python3-yaml ripgrep rsync shellcheck \
-      "$runtime_package" "$protobuf_package" \
-      ros-jazzy-ament-cmake ros-jazzy-ament-cmake-gtest \
-      ros-jazzy-rcl-interfaces ros-jazzy-rclcpp ros-jazzy-rcpputils \
-      ros-jazzy-rmw ros-jazzy-rosidl-runtime-cpp \
-      ros-jazzy-rosidl-typesupport-introspection-cpp \
-      ros-jazzy-std-msgs ros-jazzy-std-srvs
+      "$runtime_package" "$protobuf_package"
     [[ -z "$ADAPTER_RUNTIME_CLIENT_DEB_VERSION" ]] || \
       test "$(dpkg-query -W -f="\${Version}" libxgc2-adapter-runtime-client-dev)" = \
         "$ADAPTER_RUNTIME_CLIENT_DEB_VERSION"

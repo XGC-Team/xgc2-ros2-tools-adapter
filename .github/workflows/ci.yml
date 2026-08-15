@@ -26,14 +26,11 @@ env:
 jobs:
   compliance:
     runs-on: ubuntu-24.04
+    container: ghcr.io/xgc-team/xgc2-images/xgc2-build-noble-dev:1.0.0
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 2
-      - name: Install compliance dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends ripgrep shellcheck python3-yaml
       - name: Run repository and package compliance
         run: |
           set -euo pipefail
@@ -51,18 +48,12 @@ jobs:
             -e ADAPTER_RUNTIME_CLIENT_DEB_VERSION \
             -e XGC2_PROTOBUF_DEB_VERSION \
             -v "$GITHUB_WORKSPACE:/workspace/source:ro" \
-            ros:jazzy-ros-base-noble bash -lc '
+            ghcr.io/xgc-team/xgc2-images/xgc2-build-noble-ros-jazzy:1.0.0 bash -lc '
               set -euo pipefail
               /workspace/source/.xgc2/scripts/configure_xgc2_apt.sh noble
               apt-get install -y --no-install-recommends \
-                build-essential clang-format-18 cmake libjsoncpp-dev pkg-config python3 \
                 "libxgc2-adapter-runtime-client-dev=${ADAPTER_RUNTIME_CLIENT_DEB_VERSION}" \
-                "xgc2-protobuf-dev=${XGC2_PROTOBUF_DEB_VERSION}" \
-                ros-jazzy-ament-cmake ros-jazzy-ament-cmake-gtest \
-                ros-jazzy-rcl-interfaces ros-jazzy-rclcpp ros-jazzy-rcpputils \
-                ros-jazzy-rmw ros-jazzy-rosidl-runtime-cpp \
-                ros-jazzy-rosidl-typesupport-introspection-cpp \
-                ros-jazzy-std-msgs ros-jazzy-std-srvs
+                "xgc2-protobuf-dev=${XGC2_PROTOBUF_DEB_VERSION}"
               set +u
               source /opt/ros/jazzy/setup.bash
               set -u
