@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 import subprocess
 import sys
@@ -101,6 +102,23 @@ class ArtifactManifestTest(unittest.TestCase):
         manifest_path = self.root / "manifests" / f"{PRODUCT}_noble_amd64.build.json"
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         self.assertEqual("xgc2.build-artifact.v1", manifest["schema"])
+        self.assertEqual(
+            {
+                "architecture",
+                "ci",
+                "created_at",
+                "debs",
+                "distribution",
+                "product",
+                "schema",
+                "source_sha",
+                "version",
+            },
+            set(manifest),
+        )
+        created_at = datetime.fromisoformat(manifest["created_at"].replace("Z", "+00:00"))
+        self.assertEqual(timezone.utc, created_at.tzinfo)
+        self.assertTrue(manifest["created_at"].endswith("Z"))
         self.assertEqual(PACKAGE, manifest["debs"][0]["package"])
 
         subprocess.run(

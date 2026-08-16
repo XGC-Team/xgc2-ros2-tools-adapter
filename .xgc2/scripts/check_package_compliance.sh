@@ -137,6 +137,8 @@ for workflow in ci.yml release.yml; do
 done
 grep -Fq 'xgc2-build-noble-full-jazzy:1.0.0' \
   "$REPO_ROOT/.xgc2/scripts/build_debs_in_docker.sh"
+grep -Fq '"created_at": utc_now()' \
+  "$REPO_ROOT/.xgc2/scripts/xgc2_artifact_manifest.py"
 grep -Fq '.xgc2/scripts/check_build_environment.sh' \
   "$REPO_ROOT/.xgc2/scripts/build_debs_in_docker.sh"
 grep -Fq 'clang-format-18' \

@@ -9,6 +9,7 @@ import json
 import re
 import shutil
 import subprocess
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -21,12 +22,17 @@ BUILD_FIELDS = {
     "source_sha",
     "distribution",
     "architecture",
+    "created_at",
     "ci",
     "debs",
 }
 CI_FIELDS = {"run_id", "workflow", "workflow_ref"}
 DEB_FIELDS = {"file", "package", "version", "architecture", "sha256", "size"}
 SOURCE_SHA = re.compile(r"^[0-9a-f]{40}(?:[0-9a-f]{24})?$")
+
+
+def utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
 def sha256(path: Path) -> str:
@@ -116,6 +122,7 @@ def create_build(args: argparse.Namespace) -> None:
         "source_sha": args.source_sha,
         "distribution": args.distribution,
         "architecture": args.architecture,
+        "created_at": utc_now(),
         "ci": ci,
         "debs": [validated_deb(args, debs[0])],
     }
