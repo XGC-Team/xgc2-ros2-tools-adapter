@@ -40,8 +40,13 @@ cleanup() {
 }
 trap cleanup EXIT
 
-apt-get update
-apt-get install -y --no-install-recommends ca-certificates curl gnupg
+for command in curl gpg; do
+  command -v "$command" >/dev/null 2>&1 || {
+    echo "XGC2 APT image is missing required command: $command" >&2
+    exit 1
+  }
+done
+dpkg-query -W ca-certificates curl gnupg >/dev/null
 curl -fsSL "$key_url" -o "$key_file"
 gpg --show-keys --with-fingerprint --with-colons "$key_file" 2>&1 \
   | grep -q '^fpr:.*:2A8E11B36F56D307ADF626D85E5FDC30979EA43F:$'

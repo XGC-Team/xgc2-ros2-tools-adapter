@@ -18,8 +18,10 @@ done
 
 for required in \
   LICENSE README.md CMakeLists.txt package.xml .clang-format \
+  .github/workflows/ci-bootstrap-gate.yml \
   .github/workflows/ci.yml .github/workflows/release.yml \
   .xgc2/dependency-lock.json .xgc2/product.yml \
+  .xgc2/scripts/check_build_environment.sh \
   .xgc2/scripts/build_debs_in_docker.sh \
   .xgc2/scripts/check_cpp_quality.sh \
   .xgc2/scripts/check_installed_packages.sh \
@@ -125,7 +127,7 @@ grep -Fq 'require_clang_format_18.sh' \
   "$REPO_ROOT/.xgc2/scripts/check_cpp_quality.sh"
 for workflow in ci.yml release.yml; do
   path="$REPO_ROOT/.github/workflows/$workflow"
-  grep -Fq 'clang-format-18' "$path"
+  grep -Fq 'ghcr.io/xgc-team/xgc2-images/xgc2-build-noble-' "$path"
   grep -Fq 'ubuntu-24.04-arm' "$path"
   grep -Fq '.xgc2/scripts/build_debs_in_docker.sh' "$path"
   grep -Fq 'xgc2_artifact_manifest.py build' "$path"
@@ -133,7 +135,12 @@ for workflow in ci.yml release.yml; do
   grep -Fq 'retention-days: 14' "$path"
   grep -Fq 'actions/upload-artifact@' "$path"
 done
-grep -Fq 'clang-format-18' "$REPO_ROOT/.xgc2/scripts/build_debs_in_docker.sh"
+grep -Fq 'xgc2-build-noble-full-jazzy:1.0.0' \
+  "$REPO_ROOT/.xgc2/scripts/build_debs_in_docker.sh"
+grep -Fq '.xgc2/scripts/check_build_environment.sh' \
+  "$REPO_ROOT/.xgc2/scripts/build_debs_in_docker.sh"
+grep -Fq 'clang-format-18' \
+  "$REPO_ROOT/.xgc2/scripts/check_build_environment.sh"
 if rg -n 'build-essential[[:space:]]+clang-format([[:space:]\\]|$)|clang-format[[:space:]]+--' \
   "$REPO_ROOT/.github" "$REPO_ROOT/.xgc2/scripts"; then
   echo "unpinned clang-format package or invocation remains" >&2
@@ -141,9 +148,16 @@ if rg -n 'build-essential[[:space:]]+clang-format([[:space:]\\]|$)|clang-format[
 fi
 grep -Fq '.xgc2/scripts/check_cpp_quality.sh' "$REPO_ROOT/.github/workflows/ci.yml"
 for input in expected_version expected_source_sha prepare_action apt_overlay_url \
-  dependency_set_digest run_cpp_quality run_source_tests; do
+  dependency_set_digest; do
   grep -Eq "^[[:space:]]+${input}:" "$REPO_ROOT/.github/workflows/release.yml"
 done
+if rg -n '^[[:space:]]+(run_cpp_quality|run_source_tests):' \
+  "$REPO_ROOT/.github/workflows/release.yml"; then
+  echo "legacy release quality input remains" >&2
+  exit 1
+fi
+grep -Fq 'reusable-check-ci-bootstrap.yml@master' \
+  "$REPO_ROOT/.github/workflows/ci-bootstrap-gate.yml"
 
 for script in "$REPO_ROOT"/.xgc2/scripts/*.sh; do
   bash -n "$script"

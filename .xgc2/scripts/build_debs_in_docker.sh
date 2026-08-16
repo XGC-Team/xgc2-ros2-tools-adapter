@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 ROS_DISTRO="${XGC2_ROS_DISTRO:-jazzy}"
 UBUNTU_CODENAME="${XGC2_UBUNTU_CODENAME:-noble}"
-DOCKER_IMAGE="${DOCKER_IMAGE:-ghcr.io/xgc-team/xgc2-images/xgc2-build-noble-ros-jazzy:1.0.0}"
+DOCKER_IMAGE="${DOCKER_IMAGE:-ghcr.io/xgc-team/xgc2-images/xgc2-build-noble-full-jazzy:1.0.0}"
 WORK_DIR="${WORK_DIR:-${REPO_ROOT}/.work/docker-${ROS_DISTRO}}"
 OUTPUT_DIR="${OUTPUT_DIR:-${REPO_ROOT}/debs}"
 EXPECTED_ARCH="${EXPECTED_ARCH:-}"
@@ -113,16 +113,18 @@ docker run --rm \
       echo "container architecture $actual_arch != $EXPECTED_ARCH" >&2
       exit 1
     }
+    /workspace/source/.xgc2/scripts/check_build_environment.sh
     /workspace/source/.xgc2/scripts/configure_xgc2_apt.sh "$UBUNTU_CODENAME"
 
-    runtime_package=libxgc2-adapter-runtime-client-dev
-    protobuf_package=xgc2-protobuf-dev
-    [[ -z "$ADAPTER_RUNTIME_CLIENT_DEB_VERSION" ]] || \
-      runtime_package="${runtime_package}=${ADAPTER_RUNTIME_CLIENT_DEB_VERSION}"
-    [[ -z "$XGC2_PROTOBUF_DEB_VERSION" ]] || \
-      protobuf_package="${protobuf_package}=${XGC2_PROTOBUF_DEB_VERSION}"
-    apt-get install -y --no-install-recommends \
-      "$runtime_package" "$protobuf_package"
+    if [[ -n "$ADAPTER_RUNTIME_CLIENT_DEB_VERSION" &&
+          -n "$XGC2_PROTOBUF_DEB_VERSION" ]]; then
+      apt-get install -y --no-install-recommends \
+        "libxgc2-adapter-runtime-client-dev=${ADAPTER_RUNTIME_CLIENT_DEB_VERSION}" \
+        "xgc2-protobuf-dev=${XGC2_PROTOBUF_DEB_VERSION}"
+    else
+      apt-get install -y --no-install-recommends \
+        libxgc2-adapter-runtime-client-dev xgc2-protobuf-dev
+    fi
     [[ -z "$ADAPTER_RUNTIME_CLIENT_DEB_VERSION" ]] || \
       test "$(dpkg-query -W -f="\${Version}" libxgc2-adapter-runtime-client-dev)" = \
         "$ADAPTER_RUNTIME_CLIENT_DEB_VERSION"

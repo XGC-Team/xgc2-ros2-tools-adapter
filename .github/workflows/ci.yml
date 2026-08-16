@@ -34,7 +34,7 @@ jobs:
       - name: Run repository and package compliance
         run: |
           set -euo pipefail
-          git diff --check HEAD
+          git --git-dir="$PWD/.git" --work-tree="$PWD" diff --check HEAD
           .xgc2/scripts/check_package_compliance.sh
 
   cpp-quality:
@@ -48,12 +48,13 @@ jobs:
             -e ADAPTER_RUNTIME_CLIENT_DEB_VERSION \
             -e XGC2_PROTOBUF_DEB_VERSION \
             -v "$GITHUB_WORKSPACE:/workspace/source:ro" \
-            ghcr.io/xgc-team/xgc2-images/xgc2-build-noble-ros-jazzy:1.0.0 bash -lc '
+            ghcr.io/xgc-team/xgc2-images/xgc2-build-noble-full-jazzy:1.0.0 bash -lc '
               set -euo pipefail
               /workspace/source/.xgc2/scripts/configure_xgc2_apt.sh noble
               apt-get install -y --no-install-recommends \
                 "libxgc2-adapter-runtime-client-dev=${ADAPTER_RUNTIME_CLIENT_DEB_VERSION}" \
                 "xgc2-protobuf-dev=${XGC2_PROTOBUF_DEB_VERSION}"
+              /workspace/source/.xgc2/scripts/check_build_environment.sh
               set +u
               source /opt/ros/jazzy/setup.bash
               set -u
