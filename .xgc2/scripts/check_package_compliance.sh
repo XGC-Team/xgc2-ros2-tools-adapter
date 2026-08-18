@@ -141,6 +141,12 @@ grep -Fq '"created_at": utc_now()' \
   "$REPO_ROOT/.xgc2/scripts/xgc2_artifact_manifest.py"
 grep -Fq '.xgc2/scripts/check_build_environment.sh' \
   "$REPO_ROOT/.xgc2/scripts/build_debs_in_docker.sh"
+grep -Fq '/etc/apt/sources.list.d/xgc2.list' \
+  "$REPO_ROOT/.xgc2/scripts/configure_xgc2_apt.sh"
+grep -Fq '00-xgc2-release-train.list' \
+  "$REPO_ROOT/.xgc2/scripts/configure_xgc2_apt.sh"
+grep -Fq 'https://xgc2.apt.xiaokang.ink' \
+  "$REPO_ROOT/.xgc2/scripts/configure_xgc2_apt.sh"
 grep -Fq 'clang-format-18' \
   "$REPO_ROOT/.xgc2/scripts/check_build_environment.sh"
 if rg -n 'build-essential[[:space:]]+clang-format([[:space:]\\]|$)|clang-format[[:space:]]+--' \
