@@ -1,16 +1,16 @@
 {
   "schema": "xgc2.dependency-lock.v1",
-  "planDependencySetDigest": "35ad0fc83cdbfcf3cadf1f9d34e6a001b3c0f1793a3bb60a4d1f45426842ed20",
+  "planDependencySetDigest": "57fcd3b7ab93e52ab63be6159d4628ccbc67d04bf9369493a0983ad17d737d0a",
   "dependencies": [
     {
       "id": "libxgc2-adapter-runtime-client-dev",
       "planAction": "verify",
       "policy": "rebuild",
       "repository": "lxk36/xgc2-adapter-runtime-client-cpp",
-      "sourceSha": "b843a120bffab8ab4f76160299876116d6ea5b24",
-      "version": "0.6.0-9",
+      "sourceSha": "fbb14df920360a018f5d1d797e639a9b3b200adf",
+      "version": "0.6.0-10",
       "package": "libxgc2-adapter-runtime-client-dev",
-      "packageVersion": "0.6.0-9~noble"
+      "packageVersion": "0.6.0-10~noble"
     },
     {
       "id": "xgc2-protobuf",

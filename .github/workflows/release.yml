@@ -39,7 +39,7 @@ defaults:
 env:
   XGC2_APT_OVERLAY_URL: ${{ inputs.apt_overlay_url }}
   XGC2_DEPENDENCY_SET_DIGEST: ${{ inputs.dependency_set_digest }}
-  ADAPTER_RUNTIME_CLIENT_DEB_VERSION: ${{ inputs.apt_overlay_url == '' && '0.6.0-9~noble' || '' }}
+  ADAPTER_RUNTIME_CLIENT_DEB_VERSION: ${{ inputs.apt_overlay_url == '' && '0.6.0-10~noble' || '' }}
   XGC2_PROTOBUF_DEB_VERSION: ${{ inputs.apt_overlay_url == '' && '0.5.0-12~noble' || '' }}
 
 jobs:
