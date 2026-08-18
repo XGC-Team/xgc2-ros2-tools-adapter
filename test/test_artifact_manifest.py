@@ -217,8 +217,8 @@ class DependencyEvidenceTest(unittest.TestCase):
         dpkg_query.write_text(
             "#!/usr/bin/env bash\n"
             "case \"${@: -1}\" in\n"
-            "  libxgc2-adapter-runtime-client-dev) printf '%s' '0.6.0-8~noble' ;;\n"
-            "  xgc2-protobuf-dev) printf '%s' '0.5.0-11~noble' ;;\n"
+            "  libxgc2-adapter-runtime-client-dev) printf '%s' '0.6.0-9~noble' ;;\n"
+            "  xgc2-protobuf-dev) printf '%s' '0.5.0-12~noble' ;;\n"
             "  *) exit 1 ;;\n"
             "esac\n",
             encoding="utf-8",

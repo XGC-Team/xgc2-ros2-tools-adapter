@@ -8,9 +8,9 @@
       "policy": "rebuild",
       "repository": "lxk36/xgc2-adapter-runtime-client-cpp",
       "sourceSha": "92be7f3d58803482bc1711f3ccef1d65b09e5ece",
-      "version": "0.6.0-8",
+      "version": "0.6.0-9",
       "package": "libxgc2-adapter-runtime-client-dev",
-      "packageVersion": "0.6.0-8~noble"
+      "packageVersion": "0.6.0-9~noble"
     },
     {
       "id": "xgc2-protobuf",
@@ -18,9 +18,9 @@
       "policy": "rebuild",
       "repository": "lxk36/xgc2-protobuf",
       "sourceSha": "46e6b318720564ca6bf48de77562d455d7c165f9",
-      "version": "0.5.0-11",
+      "version": "0.5.0-12",
       "package": "xgc2-protobuf-dev",
-      "packageVersion": "0.5.0-11~noble"
+      "packageVersion": "0.5.0-12~noble"
     }
   ]
 }
