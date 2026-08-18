@@ -57,7 +57,7 @@ expected = {
     "schema": "xgc2.product.v1",
     "id": "xgc2-ros2-tools-adapter",
     "name": "XGC2 ROS2 Tools Adapter",
-    "version": "0.1.0-1",
+    "version": "0.1.0-2",
     "kind": "ros2-apt",
 }
 for key, value in expected.items():
