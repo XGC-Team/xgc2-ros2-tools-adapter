@@ -1,7 +1,7 @@
 schema: xgc2.product.v1
 id: xgc2-ros2-tools-adapter
 name: XGC2 ROS2 Tools Adapter
-version: 0.1.0-3
+version: 0.1.0-4
 kind: ros2-apt
 summary: Generic typed ROS2 topic-publish and service-call Adapter Runtime provider.
 groups:
@@ -56,7 +56,7 @@ ownership:
   - /usr/share/xgc2/adapter-definitions/xgc2-ros2-tools-adapter.json
   - /usr/share/xgc2/process-definitions/xgc2-ros2-tools-adapter.json
 release:
-  repository: lxk36/xgc2-ros2-tools-adapter
+  repository: XGC-Team/xgc2-ros2-tools-adapter
   ref: jazzy
   workflow: release.yml
   ci_workflow: ci.yml
@@ -67,4 +67,4 @@ release:
     libxgc2-adapter-runtime-client-dev: rebuild
     xgc2-protobuf: rebuild
   apt_versions:
-    noble: 0.1.0-3
+    noble: 0.1.0-4

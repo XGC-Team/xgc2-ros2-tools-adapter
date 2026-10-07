@@ -57,7 +57,7 @@ expected = {
     "schema": "xgc2.product.v1",
     "id": "xgc2-ros2-tools-adapter",
     "name": "XGC2 ROS2 Tools Adapter",
-    "version": "0.1.0-3",
+    "version": "0.1.0-4",
     "kind": "ros2-apt",
 }
 for key, value in expected.items():
@@ -77,7 +77,7 @@ release = product.get("release")
 if not isinstance(release, dict):
     raise SystemExit("release metadata must be a mapping")
 release_identity = {
-    "repository": "lxk36/xgc2-ros2-tools-adapter",
+    "repository": "XGC-Team/xgc2-ros2-tools-adapter",
     "ref": "jazzy",
     "workflow": "release.yml",
     "ci_workflow": "ci.yml",
