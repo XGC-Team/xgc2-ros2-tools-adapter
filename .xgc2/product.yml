@@ -2,7 +2,7 @@ schema: xgc2.product.v1
 id: xgc2-ros2-tools-adapter
 name: XGC2 ROS2 Tools Adapter
 version: 0.1.0-4
-kind: ros2-apt
+kind: source
 summary: Generic typed ROS2 topic-publish and service-call Adapter Runtime provider.
 groups:
 - ros2
@@ -13,58 +13,9 @@ ros:
   workspace: ament
   packages:
   - xgc_ros2_tools_adapter
-apt:
-  distribution: noble
-  install:
-  - ros-jazzy-xgc2-ros2-tools-adapter
-  packages:
-  - ros-jazzy-xgc2-ros2-tools-adapter
-  package_architectures:
-    ros-jazzy-xgc2-ros2-tools-adapter:
-    - amd64
-    - arm64
-  package_distributions:
-    ros-jazzy-xgc2-ros2-tools-adapter:
-    - noble
-  depends:
-  - libjsoncpp25
-  - libxgc2-adapter-runtime-client2
-  - ros-jazzy-rclcpp
-  - ros-jazzy-rcpputils
-  - ros-jazzy-rmw
-  - ros-jazzy-rosidl-runtime-cpp
-  - ros-jazzy-rosidl-typesupport-introspection-cpp
-usage:
-  install: |
-    sudo apt update
-    sudo apt install ros-jazzy-xgc2-ros2-tools-adapter
-  smoke_test: |
-    test -x /opt/ros/jazzy/lib/xgc_ros2_tools_adapter/xgc_ros2_tools_adapter_node
-    test -f /usr/share/xgc2/adapter-definitions/xgc2-ros2-tools-adapter.json
-  notes: |
-    Core or Agent supervises one process per frozen ROS 2 native context and
-    supplies a mode-0600 binary AdapterProcessBootstrap. The installed package
-    depends on the Adapter Runtime ABI package; SDK headers and protobuf schema
-    sources remain build-only dependencies.
-ownership:
-  paths:
-  - /opt/ros/jazzy/share/ament_index/resource_index/package_run_dependencies/xgc_ros2_tools_adapter
-  - /opt/ros/jazzy/share/ament_index/resource_index/packages/xgc_ros2_tools_adapter
-  - /opt/ros/jazzy/share/ament_index/resource_index/parent_prefix_path/xgc_ros2_tools_adapter
-  - /opt/ros/jazzy/share/xgc_ros2_tools_adapter
-  - /opt/ros/jazzy/lib/xgc_ros2_tools_adapter/xgc_ros2_tools_adapter_node
-  - /usr/share/xgc2/adapter-definitions/xgc2-ros2-tools-adapter.json
-  - /usr/share/xgc2/process-definitions/xgc2-ros2-tools-adapter.json
 release:
   repository: XGC-Team/xgc2-ros2-tools-adapter
   ref: jazzy
-  workflow: release.yml
-  ci_workflow: ci.yml
-  requires:
-  - libxgc2-adapter-runtime-client-dev
-  - xgc2-protobuf
-  dependency_policy:
-    libxgc2-adapter-runtime-client-dev: rebuild
-    xgc2-protobuf: rebuild
-  apt_versions:
-    noble: 0.1.0-4
+lifecycle:
+  deprecated: true
+  notes: Frozen ROS2 source; no active APT publication.
